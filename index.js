@@ -76,19 +76,19 @@ async function run() {
       res.send(result);
     });
 
-  app.get("/recipes/top-liked", async (req, res) => {
-  try {
-    const topRecipes = await recipeCollection
-      .find()
-      .sort({ likeCount: -1 }) // highest to lowest
-      .limit(6) // only top 6
-      .toArray();
+    app.get("/recipes/top-liked", async (req, res) => {
+      try {
+        const topRecipes = await recipeCollection
+          .find()
+          .sort({ likeCount: -1 }) // highest to lowest
+          .limit(6) // only top 6
+          .toArray();
 
-    res.send(topRecipes);
-  } catch (error) {
-    res.status(500).send({ error: "Failed to fetch top liked recipes" });
-  }
-});
+        res.send(topRecipes);
+      } catch (error) {
+        res.status(500).send({ error: "Failed to fetch top liked recipes" });
+      }
+    });
 
     //  Like a recipe (update like count)
     app.patch("/recipes/:id/like", async (req, res) => {
