@@ -46,15 +46,31 @@ async function run() {
 
     //  recipe related database
 
-    // get recipe form  databse
+    // get recipe form  databse filtered by email
     app.get("/recipes", async (req, res) => {
       const cursor = recipeCollection.find();
       const result = await cursor.toArray();
       res.send(result);
     });
-
+    // post data in mongodb
+    app.post("/recipes", async (req, res) => {
+      const userEmail = req.query.body;
+      try {
+        let query = {};
+        if (userEmail) {
+          query.email = userEmail;
+        }
+        const recipes = await Recipe.find(query);
+        res.status(201).json(result);
+      } catch (error) {}
+    });
     // update recipe data to like count
-
+    app.get("/recipes", async () => {
+      const email = req.query.email;
+      const query = email ? { email } : {};
+      const recipes = await Recipe.find(query);
+      res.json(recipes);
+    });
     app.patch("/recipes/:id/like", async (req, res) => {
       const { id } = req.params;
       const { likeCount } = req.body;
@@ -89,7 +105,7 @@ async function run() {
       const newRecipe = req.body;
       const result = await recipeCollection.insertOne(newRecipe);
       res.send(result);
-    });          
+    });
 
     await client.db("admin").command({ ping: 1 });
     console.log(
