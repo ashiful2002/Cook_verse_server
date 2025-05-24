@@ -53,11 +53,20 @@ async function run() {
       res.send(result);
     });
 
+    // update recipe data to like count
+
+    app.patch("/recipes/:id/like", async (req, res) => {
+      const { id } = req.params;
+      const { likeCount } = req.body;
+      const result = await recipeCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { likeCount: String(likeCount) } }
+      );
+      res.send(result);
+    });
+
     // to receive data from database and send to frontend
 
-
-
-    
     app.get("/recipes/:id", async (req, res) => {
       const id = req.params.id;
       try {
@@ -80,7 +89,7 @@ async function run() {
       const newRecipe = req.body;
       const result = await recipeCollection.insertOne(newRecipe);
       res.send(result);
-    });
+    });          
 
     await client.db("admin").command({ ping: 1 });
     console.log(
