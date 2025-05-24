@@ -46,31 +46,22 @@ async function run() {
 
     //  recipe related database
 
-    // get recipe form  databse filtered by email
+    //  Get all recipes or filter by email
     app.get("/recipes", async (req, res) => {
-      const cursor = recipeCollection.find();
-      const result = await cursor.toArray();
-      res.send(result);
-    });
-    // post data in mongodb
-    app.post("/recipes", async (req, res) => {
-      const userEmail = req.query.body;
-      try {
-        let query = {};
-        if (userEmail) {
-          query.email = userEmail;
-        }
-        const recipes = await Recipe.find(query);
-        res.status(201).json(result);
-      } catch (error) {}
-    });
-    // update recipe data to like count
-    app.get("/recipes", async () => {
       const email = req.query.email;
       const query = email ? { email } : {};
-      const recipes = await Recipe.find(query);
-      res.json(recipes);
+      const result = await recipeCollection.find(query).toArray();
+      res.send(result);
     });
+
+    // Add a new recipe
+    app.post("/recipes", async (req, res) => {
+      const newRecipe = req.body;
+      const result = await recipeCollection.insertOne(newRecipe);
+      res.send(result);
+    });
+
+    //  Like a recipe (update like count)
     app.patch("/recipes/:id/like", async (req, res) => {
       const { id } = req.params;
       const { likeCount } = req.body;
@@ -81,8 +72,7 @@ async function run() {
       res.send(result);
     });
 
-    // to receive data from database and send to frontend
-
+    //Get a single recipe by ID
     app.get("/recipes/:id", async (req, res) => {
       const id = req.params.id;
       try {
@@ -91,20 +81,26 @@ async function run() {
         });
         if (!recipe) {
           return res.status(404).send({ error: "Recipe not found" });
-        } else {
-          res.send(recipe);
         }
+        res.send(recipe);
       } catch (error) {
-        res.status(500).send({ error: "server error" });
+        res.status(500).send({ error: "Server error" });
       }
-      //   console.log(id);
     });
 
-    // post users data to database
-    app.post("/recipes", async (req, res) => {
-      const newRecipe = req.body;
-      const result = await recipeCollection.insertOne(newRecipe);
-      res.send(result);
+    // delete recipe by user
+    app.delete("/recipes/:id", async (req, res) => {
+      const id = req.params.id;
+      try {
+        const result = await recipeCollection.deleteOne({ _id: ObjectId(id) });
+        if (result.deletedCount === 0) {
+          return res.status(404).send({ error: "recipe not found" });
+        } else {
+          res.send({ message: "Recipe Deleted successfully " });
+        }
+      } catch (err) {
+        res.status(500).send({ error: "Failed to delete recipe" });
+      }
     });
 
     await client.db("admin").command({ ping: 1 });
