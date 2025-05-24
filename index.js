@@ -53,6 +53,21 @@ async function run() {
       const result = await recipeCollection.find(query).toArray();
       res.send(result);
     });
+    ////////////////////////// /////////
+    app.get("/recipes", async (req, res) => {
+      const email = req.query.email;
+      let query = {};
+      if (email) {
+        query.email = email;
+      }
+
+      try {
+        const recipes = await recipeCollection.find(query).toArray();
+        res.send(recipes);
+      } catch (error) {
+        res.status(500).send({ error: "Failed to fetch " });
+      }
+    });
 
     // Add a new recipe
     app.post("/recipes", async (req, res) => {
@@ -88,11 +103,37 @@ async function run() {
       }
     });
 
+    /// ////// /////// /////
+
+    // update data by patch
+
+    app.patch("/recipes/:id", async (req, res) => {
+      const id = req.params.id;
+      const updateData = req.body;
+
+      try {
+        const result = await recipeCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: updateData }
+        );
+
+        if (result.matchedCount === 0) {
+          return res.status(404).send({ error: "No recipe updated" });
+        }
+
+        res.send({ message: "recipe updated !", result });
+      } catch (error) {
+        res.status(500).send({ err: "Updated failed" });
+      }
+    });
+
     // delete recipe by user
     app.delete("/recipes/:id", async (req, res) => {
       const id = req.params.id;
       try {
-        const result = await recipeCollection.deleteOne({ _id: ObjectId(id) });
+        const result = await recipeCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
         if (result.deletedCount === 0) {
           return res.status(404).send({ error: "recipe not found" });
         } else {
@@ -103,6 +144,7 @@ async function run() {
       }
     });
 
+    //////////
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
